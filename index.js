@@ -47,13 +47,13 @@ app.get("/sheet-no-price", async (req, res) => {
       return;
     }
 
-    const { yearsTillRepayment, couponsSum, putOffer } = getBondData(data);
+    const { daysTillRepayment, couponsSum, putOffer } = getBondData(data);
 
     const hasOfferAnswer = putOffer ? "Да" : "Нет";
 
     res
       .status(200)
-      .send(`${couponsSum},${yearsTillRepayment},${hasOfferAnswer}`);
+      .send(`${couponsSum},${daysTillRepayment},${hasOfferAnswer}`);
   } catch (e) {
     res.status(500).send(e.message);
   }
