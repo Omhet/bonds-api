@@ -3,6 +3,7 @@ import cors from "cors";
 import express from "express";
 // import cache from "express-aggressive-cache";
 import { Bonds } from "./bonds.js";
+import { getBondData } from "./utils.js";
 
 const app = express();
 
@@ -25,16 +26,36 @@ app.get("/sheet", async (req, res) => {
       return;
     }
 
-    let { simpleYield, daysTillRedemption, currentCostWithNkd } = data;
-    const yearsTillRedemption = (daysTillRedemption / 365).toFixed(2);
-    simpleYield = simpleYield.toFixed(3);
-    currentCostWithNkd = currentCostWithNkd.toFixed(2);
+    const { simpleYield, yearsTillRepayment, currentCostWithNkd } =
+      getBondData(data);
 
     res
       .status(200)
-      .send(`${simpleYield},${yearsTillRedemption},${currentCostWithNkd}`);
+      .send(`${simpleYield},${yearsTillRepayment},${currentCostWithNkd}`);
   } catch (e) {
-    res.status(500).send(e);
+    res.status(500).send(e.message);
+  }
+});
+
+app.get("/sheet-no-price", async (req, res) => {
+  try {
+    const { code } = req.query;
+    const bond = await Bonds.updateBond({ code });
+    const data = Bonds.calculate(bond);
+    if (!data) {
+      res.status(404).send("No data");
+      return;
+    }
+
+    const { yearsTillRepayment, couponsSum, putOffer } = getBondData(data);
+
+    const hasOfferAnswer = putOffer ? "Да" : "Нет";
+
+    res
+      .status(200)
+      .send(`${couponsSum},${yearsTillRepayment},${hasOfferAnswer}`);
+  } catch (e) {
+    res.status(500).send(e.message);
   }
 });
 
